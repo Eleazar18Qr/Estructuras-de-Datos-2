@@ -273,6 +273,91 @@ class ArbolBinario:
             self.post_orden(actual.derecho, resultado)   # 2. Derecha
             resultado.append(actual.dato)        # 3. Raíz
         return resultado
+    
+    # --- BLOQUE LÓGICO: CASO 1 ---
+    def ejecutar_caso_1(self, dato):
+        """
+        Lógica: Buscar -> EsHoja -> Eliminar1.
+        Para nodos terminales.
+        """
+        # 1. Buscar (obtenemos el nodo y su padre para poder desconectarlo)
+        padre, actual = self._buscar_con_padre(dato)
+        
+        if actual and self.es_hoja(actual):
+            # 3. Eliminar1
+            self._eliminar_1(padre, actual)
+            return True
+        return False
+
+    def _eliminar_1(self, padre, actual):
+        """Elimina físicamente un nodo hoja."""
+        if padre is None:
+            self.raiz = None
+        elif padre.izquierdo == actual:
+            padre.izquierdo = None
+        else:
+            padre.derecho = None
+
+    # --- BLOQUE LÓGICO: CASO 2 ---
+    def ejecutar_caso_2(self, dato):
+        """
+        Lógica: EsIncompleto -> EncontrarSucesor -> Eliminar2.
+        Para nodos con un solo heredero.
+        """
+        padre, actual = self._buscar_con_padre(dato)
+        
+        if actual and self.es_incompleto(actual):
+            # En el caso 2, el "sucesor" es simplemente el único hijo que tiene
+            heredero = actual.izquierdo if actual.izquierdo else actual.derecho
+            # 3. Eliminar2
+            self._eliminar_2(padre, actual, heredero)
+            return True
+        return False
+
+    def _eliminar_2(self, padre, actual, heredero):
+        """Elimina un nodo haciendo que el abuelo adopte al nieto (heredero)."""
+        if padre is None:
+            self.raiz = heredero
+        elif padre.izquierdo == actual:
+            padre.izquierdo = heredero
+        else:
+            padre.derecho = heredero
+
+    # --- BLOQUE LÓGICO: CASO 3 ---
+    def ejecutar_caso_3(self, dato):
+        """
+        Lógica: EsCompleto -> EncontrarSucesor -> Eliminar2.
+        Para nodos con dos hijos.
+        """
+        padre, actual = self._buscar_con_padre(dato)
+        
+        if actual and self.es_completo(actual):
+            # 2. Encontrar Sucesor (el más pequeño de la derecha)
+            sucesor = self.encontrar_sucesor(actual)
+            valor_sucesor = sucesor.dato
+            
+            # 3. Eliminar2 (o Eliminar1) aplicado al SUCESOR para quitarlo de abajo
+            # Nota: El sucesor siempre se borra con lógica de Caso 1 o 2
+            self.eliminar(valor_sucesor)
+            
+            # Finalmente, el nodo actual toma el valor del que acabamos de borrar
+            actual.dato = valor_sucesor
+            return True
+        return False
+
+    # --- MÉTODOS AUXILIARES ---
+
+    def _buscar_con_padre(self, dato):
+        """Método de apoyo para encontrar un nodo y su ancestro directo."""
+        padre = None
+        actual = self.raiz
+        while actual is not None and actual.dato != dato:
+            padre = actual
+            if dato < actual.dato:
+                actual = actual.izquierdo
+            else:
+                actual = actual.derecho
+        return padre, actual
 
 # --- EVALUACIÓN DE MÉTODOS RECURSIVOS E ITERATIVOS ---
 
